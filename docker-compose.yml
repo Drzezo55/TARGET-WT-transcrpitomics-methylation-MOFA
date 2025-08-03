@@ -1,0 +1,35 @@
+services:
+  positron-r:
+    platform: linux/amd64  # Required for Apple Silicon Macs
+    build:
+      context: "."
+      dockerfile: "Dockerfile"
+    ports:
+      - "8787:8787"  # RStudio Server (optional backup)
+      - "2222:22"    # SSH access for Positron
+    environment:
+      - DISABLE_AUTH=true  # Allow password-less login to RStudio server instance
+      - RENV_PATHS_CACHE=/renv/cache  # Set renv cache location
+    volumes:
+      # Mount project working directory
+      - ./:/home/rstudio/project
+      
+      # Mount renv cache directory for persistence
+      - renv_cache:/renv/cache
+      
+      # Mount SSH public key for passwordless authentication
+      - ~/.ssh/id_rsa.pub:/home/rstudio/.ssh/authorized_keys:ro
+      
+      # Mount Positron configuration directory (Mac)
+      - ~/.positron:/home/rstudio/.positron
+      
+      # Mount VS Code configuration for extensions compatibility
+      - ~/.vscode:/home/rstudio/.vscode:ro
+    working_dir: /home/rstudio/project
+    
+    # Optionally set user to match your local user ID (helps with file permissions)
+    # user: "${UID:-1000}:${GID:-1000}"
+
+volumes:
+  renv_cache:
+    driver: local
